@@ -28,3 +28,26 @@ LIMITATIONS AND PROBLEMS
 3. Addon still slow and unoptimized (could freeze or crash with large amounts of hair).
 4. Buggy when advanced animations or rigs applied.
 5. Only one hair particle system exports at the moment.
+
+RELAVANT LINKS
+
+HAIRWORKS VIEWER :
+
+https://developer.nvidia.com/gameworksdownload
+click on HairWorks 1.1.1
+
+UNREAL ENGINE HAIRWORKS BRANCH:
+
+https://github.com/NvPhysX/UnrealEngine/tree/HairWorks
+
+UNREAL ENGINE MERGED GAMEWORKS BRANCH:
+
+https://github.com/GalaxyMan2015/UnrealEngine/tree/4.9.2_NVIDIA_Techs
+
+UNITY HAIRWORKS PORT :
+
+https://github.com/unity3d-jp/NVIDIAHairWorksIntegration
+
+TUTORIAL VIDEO :
+
+https://youtu.be/mnVRQpPsRVE

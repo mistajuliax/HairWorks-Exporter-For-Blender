@@ -50,4 +50,4 @@ https://github.com/unity3d-jp/NVIDIAHairWorksIntegration
 
 TUTORIAL VIDEO :
 
-https://youtu.be/mnVRQpPsRVE
+https://www.youtube.com/watch?v=mnVRQpPsRVE

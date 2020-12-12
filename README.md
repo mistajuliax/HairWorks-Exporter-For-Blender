@@ -4,7 +4,7 @@ A Blender Addon that will allow you to export a Blender hair particle system to 
 HOW TO INSTALL THE ADDON
 
 1. Navigate to the directory blender was installed in.
-2. Navigate to the following folder InstallDir\VersionNumber\scripts\addons. For example: C:\Blender\2.75\scripts\addons
+2. Navigate to the following folder InstallDir\VersionNumber\scripts\addons. For example: C:\Blender\2.91\scripts\addons
 3. Paste the entire io_export_apx folder in that directory.
 4. Open Blender.
 5. Open File->User Preferences.

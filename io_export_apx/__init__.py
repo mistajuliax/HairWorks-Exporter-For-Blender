@@ -29,23 +29,22 @@ def getClosest(vec, vecList):
 
 
 def create_hairworks_file(context, filepath):
-    kwargs = {}
-    
     #%% numHairs totalVerts
     ctxt_object = bpy.context.object.evaluated_get(context.evaluated_depsgraph_get())
     hairs = ctxt_object.particle_systems[0].particles
-    kwargs['numHairs'] = len(hairs)
-    kwargs['totalVerts'] = sum([len(p.hair_keys) for p in hairs])
-    
+    kwargs = {
+        'numHairs': len(hairs),
+        'totalVerts': sum(len(p.hair_keys) for p in hairs),
+    }
+
     #%% hair_verts
     hair_verts = [] #list of vertices of all hairs
     meshCoords = [] #root vertex of each guide hair
     for hair in hairs:
         meshCoords.append(hair.hair_keys[0].co)
-        for key in hair.hair_keys:
-            hair_verts.append([key.co.x, key.co.y, key.co.z])
+        hair_verts.extend([key.co.x, key.co.y, key.co.z] for key in hair.hair_keys)
     kwargs['hair_verts'] = ', '.join([' '.join(map(str, vert)) for vert in hair_verts])
-    
+
     #%% endIndices
     i = -1
     end_indices = [] #list of vertex indices of hair tips
@@ -53,18 +52,20 @@ def create_hairworks_file(context, filepath):
         i += len(hair.hair_keys)
         end_indices.append(i)
     kwargs['endIndices'] = ' '.join(map(str, end_indices))
-    
+
     #%% numFaces n_faceIndices faceIndices
     growth_mesh = ctxt_object.data
     face_indices = [] #list of indices into meshCoords for each vertex of each face
-                      #  assuming {growth_mesh.vertices} == {meshCoords}
     for face in growth_mesh.polygons:
-        for vertex in face.vertices:
-            face_indices.append(getClosest(growth_mesh.vertices[vertex].co, meshCoords)) #maybe handle quads and tris?
+        face_indices.extend(
+            getClosest(growth_mesh.vertices[vertex].co, meshCoords)
+            for vertex in face.vertices
+        )
+
     kwargs['numFaces'] = len(growth_mesh.polygons)
     kwargs['n_faceIndices'] = len(face_indices)
     kwargs['faceIndices'] = ' '.join(map(str, face_indices))
-    
+
     #%% n_UVs UVs
     UVs = []
     uv_act = growth_mesh.uv_layers.active
@@ -74,7 +75,7 @@ def create_hairworks_file(context, filepath):
             UVs.append(uv_layer[li].uv)
     kwargs['n_UVs'] = len(UVs)
     kwargs['UVs'] = ', '.join(' '.join(map(str, [uv.x, uv.y])) for uv in UVs)
-    
+
     #%% numBones 
     bones = []
     poseBones = []
@@ -86,7 +87,7 @@ def create_hairworks_file(context, filepath):
             if bone.name in [g.name for g in ctxt_object.vertex_groups]:
                 usedBones.append(bone)
     kwargs['numBones'] = len(usedBones)
-    
+
     #%% boneIndices boneWeights
     boneIndices = []
     boneWeights = []
@@ -102,15 +103,18 @@ def create_hairworks_file(context, filepath):
                     i += 1
     kwargs['boneIndices'] = ', '.join(' '.join(map(str, x)) for x in boneIndices)
     kwargs['boneWeights'] = ', '.join(' '.join(map(str, x)) for x in boneWeights)
-    
+
     #%% boneNameList
-    kwargs['boneNameList'] = '\n            '.join('<value type="String">{}</value>'.format(bone.name) for bone in usedBones)
+    kwargs['boneNameList'] = '\n            '.join(
+        f'<value type="String">{bone.name}</value>' for bone in usedBones
+    )
+
 
 
     #%% bindPoses
     poses = []
     for bone in usedBones:
-        for index, pose in enumerate(poseBones):
+        for pose in poseBones:
             if bone.name == pose.name:
                 par_mat_inv = bones[bone.name].parent.matrix_local.inverted_safe() if bones[bone.name].parent else Matrix()
                 matrix = par_mat_inv @ bones[bone.name].matrix_local
@@ -119,19 +123,19 @@ def create_hairworks_file(context, filepath):
                 matrix.transpose()
                 poses.append(matrix)
     kwargs['bindPoses'] = '\n            '.join(' '.join(map(str, np.array(matrix).flat)) for matrix in poses)
-    
+
     #%% num_boneParents boneParents
     boneParents = []
     for pose in poseBones:
         if pose.parent is not None:
-            for index, bone in enumerate(usedBones):
+            for bone in usedBones:
                 if pose.parent.name == bone.name:
                     boneParents.append(ctxt_object.vertex_groups[bone.name].index)
-    if len(boneParents) == 0:
+    if not boneParents:
         boneParents.append (-1)
     kwargs['num_boneParents'] = len(boneParents)
     kwargs['boneParents'] = ' '.join(map(str, boneParents))
-    
+
     #%% write the template with generated values
     with open(filepath, 'w', encoding = 'utf-8') as f:
         f.write(template.format(**kwargs))
